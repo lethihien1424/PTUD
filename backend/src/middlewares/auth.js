@@ -85,7 +85,10 @@ const authorizeHomeRoomTeacher = async (req, res, next) => {
     }
 
     // Kiểm tra loại tài khoản
-    if (req.user.loaiTaiKhoan !== "giaovien" && req.user.loaiTaiKhoan !== "gvcn") {
+    if (
+      req.user.loaiTaiKhoan !== "giaovien" &&
+      req.user.loaiTaiKhoan !== "gvcn"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Chỉ giáo viên mới có quyền truy cập",
@@ -93,8 +96,10 @@ const authorizeHomeRoomTeacher = async (req, res, next) => {
     }
 
     // Lấy thông tin giáo viên
-    const teacher = await TeacherModel.getTeacherByAccountId(req.user.maTaiKhoan);
-    
+    const teacher = await TeacherModel.getTeacherByAccountId(
+      req.user.maTaiKhoan
+    );
+
     if (!teacher) {
       return res.status(404).json({
         success: false,
@@ -103,7 +108,7 @@ const authorizeHomeRoomTeacher = async (req, res, next) => {
     }
 
     // Kiểm tra chức vụ chủ nhiệm
-    if (teacher.chucVu !== 'GVCN') {
+    if (teacher.chucVu !== "GVCN") {
       return res.status(403).json({
         success: false,
         message: "Chỉ giáo viên chủ nhiệm mới có quyền thực hiện chức năng này",
@@ -136,8 +141,11 @@ const authorizeClassAccess = async (req, res, next) => {
     }
 
     // Kiểm tra giáo viên có phải chủ nhiệm của lớp không
-    const hasPermission = await TeacherModel.isHomeRoomTeacherOfClass(teacher.maGV, maLop);
-    
+    const hasPermission = await TeacherModel.isHomeRoomTeacherOfClass(
+      teacher.maGV,
+      maLop
+    );
+
     if (!hasPermission) {
       return res.status(403).json({
         success: false,
