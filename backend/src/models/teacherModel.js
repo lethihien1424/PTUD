@@ -15,7 +15,7 @@ class TeacherModel {
          GROUP BY gv.maGV`,
         [maGV]
       );
-      
+
       return rows[0] || null;
     } catch (error) {
       throw new Error("Lỗi khi lấy thông tin giáo viên: " + error.message);
@@ -32,13 +32,13 @@ class TeacherModel {
         LEFT JOIN taikhoan tk ON gv.maTaiKhoan = tk.maTaiKhoan
         LEFT JOIN lop l ON gv.maGV = l.maGVChuNhiem
       `;
-      
+
       if (!includeInactive) {
         query += " WHERE gv.trangThai = 1";
       }
-      
+
       query += " GROUP BY gv.maGV ORDER BY gv.hoTen";
-      
+
       const [rows] = await pool.execute(query);
       return rows;
     } catch (error) {
@@ -57,16 +57,16 @@ class TeacherModel {
         LEFT JOIN lop l ON gv.maGV = l.maGVChuNhiem
         WHERE (gv.hoTen LIKE ? OR gv.chuyenMon LIKE ? OR gv.chucVu LIKE ?)
       `;
-      
+
       const params = [`%${keyword}%`, `%${keyword}%`, `%${keyword}%`];
-      
+
       if (trangThai !== null) {
         query += " AND gv.trangThai = ?";
         params.push(trangThai);
       }
-      
+
       query += " GROUP BY gv.maGV ORDER BY gv.hoTen LIMIT 50";
-      
+
       const [rows] = await pool.execute(query, params);
       return rows;
     } catch (error) {
@@ -76,36 +76,44 @@ class TeacherModel {
 
   // Thêm giáo viên mới
   static async createTeacher(teacherData) {
-    const { 
-      maGV, hoTen, CCCD, diaChi, ngayBatDau, chuyenMon, 
-      chucVu, SDT, email, maTaiKhoan 
+    const {
+      maGV,
+      hoTen,
+      CCCD,
+      diaChi,
+      ngayBatDau,
+      chuyenMon,
+      chucVu,
+      SDT,
+      email,
+      maTaiKhoan,
     } = teacherData;
-    
+
     const connection = await pool.getConnection();
-    
+
     try {
       await connection.beginTransaction();
-      
+
       // Kiểm tra mã giáo viên đã tồn tại chưa
       const [existing] = await connection.execute(
         "SELECT maGV FROM giaovien WHERE maGV = ?",
         [maGV]
       );
-      
+
       if (existing.length > 0) {
         throw new Error("Mã giáo viên đã tồn tại");
       }
-      
+
       // Kiểm tra CCCD đã tồn tại chưa
       const [existingCCCD] = await connection.execute(
         "SELECT maGV FROM giaovien WHERE CCCD = ?",
         [CCCD]
       );
-      
+
       if (existingCCCD.length > 0) {
         throw new Error("Số CCCD đã tồn tại trong hệ thống");
       }
-      
+
       // Thêm giáo viên mới với trạng thái hoạt động (1)
       await connection.execute(
         `INSERT INTO giaovien 
@@ -113,17 +121,27 @@ class TeacherModel {
           ngayKetThuc, trangThai, SDT, maTaiKhoan, email) 
          VALUES (?, ?, ?, ?, ?, ?, ?, '9999-12-31', 1, ?, ?, ?)`,
 
-        [maGV, hoTen, CCCD, diaChi, ngayBatDau, chuyenMon, chucVu, SDT, maTaiKhoan, email]
+        [
+          maGV,
+          hoTen,
+          CCCD,
+          diaChi,
+          ngayBatDau,
+          chuyenMon,
+          chucVu,
+          SDT,
+          maTaiKhoan,
+          email,
+        ]
       );
-      
+
       await connection.commit();
-      
+
       return {
         success: true,
         maGV: maGV,
-        message: "Thêm giáo viên thành công"
+        message: "Thêm giáo viên thành công",
       };
-      
     } catch (error) {
       await connection.rollback();
       throw new Error("Lỗi khi thêm giáo viên: " + error.message);
@@ -134,21 +152,19 @@ class TeacherModel {
 
   // Cập nhật thông tin giáo viên
   static async updateTeacher(maGV, updateData) {
-    const { 
-      hoTen, CCCD, diaChi, chuyenMon, chucVu, SDT, email 
-    } = updateData;
-    
+    const { hoTen, CCCD, diaChi, chuyenMon, chucVu, SDT, email } = updateData;
+
     try {
       // Kiểm tra CCCD trùng với giáo viên khác
       const [existingCCCD] = await pool.execute(
         "SELECT maGV FROM giaovien WHERE CCCD = ? AND maGV != ?",
         [CCCD, maGV]
       );
-      
+
       if (existingCCCD.length > 0) {
         throw new Error("Số CCCD đã tồn tại với giáo viên khác");
       }
-      
+
       const [result] = await pool.execute(
         `UPDATE giaovien 
          SET hoTen = ?, CCCD = ?, diaChi = ?, chuyenMon = ?, 
@@ -156,10 +172,13 @@ class TeacherModel {
          WHERE maGV = ?`,
         [hoTen, CCCD, diaChi, chuyenMon, chucVu, SDT, email, maGV]
       );
-      
+
       return {
         success: result.affectedRows > 0,
-        message: result.affectedRows > 0 ? "Cập nhật thông tin giáo viên thành công" : "Không tìm thấy giáo viên"
+        message:
+          result.affectedRows > 0
+            ? "Cập nhật thông tin giáo viên thành công"
+            : "Không tìm thấy giáo viên",
       };
     } catch (error) {
       throw new Error("Lỗi khi cập nhật thông tin giáo viên: " + error.message);
@@ -171,33 +190,36 @@ class TeacherModel {
     try {
       let query = "UPDATE giaovien SET trangThai = ?";
       let params = [trangThai];
-      
+
       // Nếu nghỉ việc (trangThai = 0), cập nhật ngày kết thúc
       if (trangThai === 0 && ngayKetThuc) {
         query += ", ngayKetThuc = ?";
         params.push(ngayKetThuc);
       }
-      
+
       // Nếu trở lại làm việc (trangThai = 1), đặt lại ngày kết thúc
       if (trangThai === 1) {
         query += ", ngayKetThuc = '9999-12-31'";
       }
-      
+
       query += " WHERE maGV = ?";
       params.push(maGV);
-      
+
       const [result] = await pool.execute(query, params);
-      
+
       const statusText = trangThai === 1 ? "kích hoạt" : "nghỉ việc";
-      
+
       return {
         success: result.affectedRows > 0,
-        message: result.affectedRows > 0 ? 
-          `Cập nhật trạng thái ${statusText} thành công` : 
-          "Không tìm thấy giáo viên"
+        message:
+          result.affectedRows > 0
+            ? `Cập nhật trạng thái ${statusText} thành công`
+            : "Không tìm thấy giáo viên",
       };
     } catch (error) {
-      throw new Error("Lỗi khi cập nhật trạng thái giáo viên: " + error.message);
+      throw new Error(
+        "Lỗi khi cập nhật trạng thái giáo viên: " + error.message
+      );
     }
   }
 
@@ -215,10 +237,12 @@ class TeacherModel {
          ORDER BY l.tenLop`,
         [maGV]
       );
-      
+
       return rows;
     } catch (error) {
-      throw new Error("Lỗi khi lấy danh sách lớp của giáo viên: " + error.message);
+      throw new Error(
+        "Lỗi khi lấy danh sách lớp của giáo viên: " + error.message
+      );
     }
   }
 
@@ -235,7 +259,7 @@ class TeacherModel {
          GROUP BY chuyenMon
          ORDER BY tongSo DESC`
       );
-      
+
       return rows;
     } catch (error) {
       throw new Error("Lỗi khi lấy thống kê giáo viên: " + error.message);
@@ -255,7 +279,7 @@ class TeacherModel {
          GROUP BY chucVu
          ORDER BY tongSo DESC`
       );
-      
+
       return rows;
     } catch (error) {
       throw new Error("Lỗi khi lấy thống kê theo chức vụ: " + error.message);
@@ -272,10 +296,12 @@ class TeacherModel {
          WHERE gv.trangThai = 1 AND l.maGVChuNhiem IS NULL
          ORDER BY gv.hoTen`
       );
-      
+
       return rows;
     } catch (error) {
-      throw new Error("Lỗi khi lấy danh sách giáo viên có thể làm chủ nhiệm: " + error.message);
+      throw new Error(
+        "Lỗi khi lấy danh sách giáo viên có thể làm chủ nhiệm: " + error.message
+      );
     }
   }
 
@@ -288,13 +314,15 @@ class TeacherModel {
          WHERE l.maGVChuNhiem = ?`,
         [maGV]
       );
-      
+
       return {
         isHomeRoomTeacher: rows.length > 0,
-        classes: rows
+        classes: rows,
       };
     } catch (error) {
-      throw new Error("Lỗi khi kiểm tra trạng thái chủ nhiệm: " + error.message);
+      throw new Error(
+        "Lỗi khi kiểm tra trạng thái chủ nhiệm: " + error.message
+      );
     }
   }
 
@@ -310,10 +338,12 @@ class TeacherModel {
          ORDER BY soNamLamViec DESC`,
         [yearsThreshold]
       );
-      
+
       return rows;
     } catch (error) {
-      throw new Error("Lỗi khi lấy danh sách giáo viên sắp nghỉ hưu: " + error.message);
+      throw new Error(
+        "Lỗi khi lấy danh sách giáo viên sắp nghỉ hưu: " + error.message
+      );
     }
   }
 
@@ -331,10 +361,12 @@ class TeacherModel {
          ORDER BY gv.hoTen`,
         [chuyenMon]
       );
-      
+
       return rows;
     } catch (error) {
-      throw new Error("Lỗi khi lấy danh sách giáo viên theo chuyên môn: " + error.message);
+      throw new Error(
+        "Lỗi khi lấy danh sách giáo viên theo chuyên môn: " + error.message
+      );
     }
   }
 
@@ -354,10 +386,12 @@ class TeacherModel {
          ORDER BY gv.hoTen`,
         []
       );
-      
+
       return rows;
     } catch (error) {
-      throw new Error("Lỗi khi lấy danh sách giáo viên chủ nhiệm: " + error.message);
+      throw new Error(
+        "Lỗi khi lấy danh sách giáo viên chủ nhiệm: " + error.message
+      );
     }
   }
 
@@ -371,7 +405,7 @@ class TeacherModel {
          WHERE gv.maGV = ? AND l.maLop = ? AND gv.chucVu = 'GVCN'`,
         [maGV, maLop]
       );
-      
+
       return rows.length > 0;
     } catch (error) {
       throw new Error("Lỗi khi kiểm tra quyền chủ nhiệm: " + error.message);
@@ -388,10 +422,12 @@ class TeacherModel {
          WHERE gv.maTaiKhoan = ? AND gv.trangThai = 1`,
         [maTaiKhoan]
       );
-      
+
       return rows[0] || null;
     } catch (error) {
-      throw new Error("Lỗi khi lấy thông tin giáo viên theo tài khoản: " + error.message);
+      throw new Error(
+        "Lỗi khi lấy thông tin giáo viên theo tài khoản: " + error.message
+      );
     }
   }
 }

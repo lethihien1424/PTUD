@@ -12,7 +12,7 @@ class ClassModel {
          WHERE l.maLop = ?`,
         [maLop]
       );
-      
+
       return rows[0] || null;
     } catch (error) {
       throw new Error("Lỗi khi lấy thông tin lớp: " + error.message);
@@ -32,7 +32,7 @@ class ClassModel {
          ORDER BY hs.hoTen`,
         [maLop]
       );
-      
+
       return rows;
     } catch (error) {
       throw new Error("Lỗi khi lấy danh sách học sinh: " + error.message);
@@ -53,10 +53,12 @@ class ClassModel {
          ORDER BY l.tenLop`,
         [maGiaoVien]
       );
-      
+
       return rows;
     } catch (error) {
-      throw new Error("Lỗi khi lấy danh sách lớp của giáo viên: " + error.message);
+      throw new Error(
+        "Lỗi khi lấy danh sách lớp của giáo viên: " + error.message
+      );
     }
   }
 
@@ -79,7 +81,7 @@ class ClassModel {
          WHERE hs.maLop = ?`,
         [maLop, startDate, endDate, maLop]
       );
-      
+
       return rows[0] || {};
     } catch (error) {
       throw new Error("Lỗi khi lấy thống kê lớp: " + error.message);
@@ -100,27 +102,32 @@ class ClassModel {
          ORDER BY l.khoi, l.tenLop`,
         [maTruong]
       );
-      
+
       return rows;
     } catch (error) {
-      throw new Error("Lỗi khi lấy danh sách lớp theo trường: " + error.message);
+      throw new Error(
+        "Lỗi khi lấy danh sách lớp theo trường: " + error.message
+      );
     }
   }
 
   // Cập nhật thông tin lớp
   static async updateClass(maLop, updateData) {
     const { tenLop, khoi, maGiaoVienChuNhiem } = updateData;
-    
+
     try {
       const [result] = await pool.execute(
         `UPDATE lop SET tenLop = ?, khoi = ?, maGiaoVienChuNhiem = ? 
          WHERE maLop = ?`,
         [tenLop, khoi, maGiaoVienChuNhiem, maLop]
       );
-      
+
       return {
         success: result.affectedRows > 0,
-        message: result.affectedRows > 0 ? "Cập nhật lớp thành công" : "Không tìm thấy lớp"
+        message:
+          result.affectedRows > 0
+            ? "Cập nhật lớp thành công"
+            : "Không tìm thấy lớp",
       };
     } catch (error) {
       throw new Error("Lỗi khi cập nhật lớp: " + error.message);
@@ -130,18 +137,18 @@ class ClassModel {
   // Tạo lớp mới
   static async createClass(classData) {
     const { tenLop, khoi, maTruong, maGiaoVienChuNhiem } = classData;
-    
+
     try {
       const [result] = await pool.execute(
         `INSERT INTO lop (tenLop, khoi, maTruong, maGiaoVienChuNhiem) 
          VALUES (?, ?, ?, ?)`,
         [tenLop, khoi, maTruong, maGiaoVienChuNhiem]
       );
-      
+
       return {
         success: true,
         maLop: result.insertId,
-        message: "Tạo lớp thành công"
+        message: "Tạo lớp thành công",
       };
     } catch (error) {
       throw new Error("Lỗi khi tạo lớp: " + error.message);

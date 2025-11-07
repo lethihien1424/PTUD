@@ -17,7 +17,7 @@ class StudentModel {
          WHERE hs.maHocSinh = ?`,
         [maHocSinh]
       );
-      
+
       return rows[0] || null;
     } catch (error) {
       throw new Error("Lỗi khi lấy thông tin học sinh: " + error.message);
@@ -37,7 +37,7 @@ class StudentModel {
          ORDER BY hs.hoTen`,
         [maLop]
       );
-      
+
       return rows;
     } catch (error) {
       throw new Error("Lỗi khi lấy danh sách học sinh: " + error.message);
@@ -53,16 +53,16 @@ class StudentModel {
         LEFT JOIN lop l ON hs.maLop = l.maLop
         WHERE (hs.hoTen LIKE ? OR hs.mssv LIKE ?)
       `;
-      
+
       const params = [`%${keyword}%`, `%${keyword}%`];
-      
+
       if (maLop) {
         query += " AND hs.maLop = ?";
         params.push(maLop);
       }
-      
+
       query += " ORDER BY hs.hoTen LIMIT 50";
-      
+
       const [rows] = await pool.execute(query, params);
       return rows;
     } catch (error) {
@@ -85,17 +85,21 @@ class StudentModel {
          WHERE maHocSinh = ? AND DATE(ngayDiemDanh) BETWEEN ? AND ?`,
         [maHocSinh, startDate, endDate]
       );
-      
-      return rows[0] || {
-        tongSoBuoi: 0,
-        soNgayCoMat: 0,
-        soNgayVang: 0,
-        soNgayMuon: 0,
-        soNgayCoPhep: 0,
-        tiLeDiHoc: 0
-      };
+
+      return (
+        rows[0] || {
+          tongSoBuoi: 0,
+          soNgayCoMat: 0,
+          soNgayVang: 0,
+          soNgayMuon: 0,
+          soNgayCoPhep: 0,
+          tiLeDiHoc: 0,
+        }
+      );
     } catch (error) {
-      throw new Error("Lỗi khi lấy thống kê điểm danh học sinh: " + error.message);
+      throw new Error(
+        "Lỗi khi lấy thống kê điểm danh học sinh: " + error.message
+      );
     }
   }
 
@@ -112,7 +116,7 @@ class StudentModel {
          LIMIT ?`,
         [maHocSinh, limit]
       );
-      
+
       return rows;
     } catch (error) {
       throw new Error("Lỗi khi lấy lịch sử điểm danh: " + error.message);
@@ -121,8 +125,9 @@ class StudentModel {
 
   // Cập nhật thông tin học sinh
   static async updateStudent(maHocSinh, updateData) {
-    const { hoTen, ngaySinh, gioiTinh, soDienThoai, email, diaChi } = updateData;
-    
+    const { hoTen, ngaySinh, gioiTinh, soDienThoai, email, diaChi } =
+      updateData;
+
     try {
       const [result] = await pool.execute(
         `UPDATE hocsinh 
@@ -130,10 +135,13 @@ class StudentModel {
          WHERE maHocSinh = ?`,
         [hoTen, ngaySinh, gioiTinh, soDienThoai, email, diaChi, maHocSinh]
       );
-      
+
       return {
         success: result.affectedRows > 0,
-        message: result.affectedRows > 0 ? "Cập nhật thông tin học sinh thành công" : "Không tìm thấy học sinh"
+        message:
+          result.affectedRows > 0
+            ? "Cập nhật thông tin học sinh thành công"
+            : "Không tìm thấy học sinh",
       };
     } catch (error) {
       throw new Error("Lỗi khi cập nhật thông tin học sinh: " + error.message);
@@ -147,10 +155,13 @@ class StudentModel {
         "UPDATE hocsinh SET maLop = ? WHERE maHocSinh = ?",
         [maLopMoi, maHocSinh]
       );
-      
+
       return {
         success: result.affectedRows > 0,
-        message: result.affectedRows > 0 ? "Chuyển lớp thành công" : "Không tìm thấy học sinh"
+        message:
+          result.affectedRows > 0
+            ? "Chuyển lớp thành công"
+            : "Không tìm thấy học sinh",
       };
     } catch (error) {
       throw new Error("Lỗi khi chuyển lớp: " + error.message);
@@ -158,7 +169,12 @@ class StudentModel {
   }
 
   // Lấy danh sách học sinh có tỷ lệ vắng cao
-  static async getStudentsWithHighAbsence(maLop, tiLeVangToiThieu = 20, startDate, endDate) {
+  static async getStudentsWithHighAbsence(
+    maLop,
+    tiLeVangToiThieu = 20,
+    startDate,
+    endDate
+  ) {
     try {
       const [rows] = await pool.execute(
         `SELECT 
@@ -177,28 +193,52 @@ class StudentModel {
          ORDER BY tiLeVang DESC`,
         [maLop, startDate, endDate, maLop, tiLeVangToiThieu]
       );
-      
+
       return rows;
     } catch (error) {
-      throw new Error("Lỗi khi lấy danh sách học sinh vắng nhiều: " + error.message);
+      throw new Error(
+        "Lỗi khi lấy danh sách học sinh vắng nhiều: " + error.message
+      );
     }
   }
 
   // Tạo học sinh mới
   static async createStudent(studentData) {
-    const { hoTen, mssv, ngaySinh, gioiTinh, soDienThoai, email, diaChi, maLop, maPhuHuynh, maTaiKhoan } = studentData;
-    
+    const {
+      hoTen,
+      mssv,
+      ngaySinh,
+      gioiTinh,
+      soDienThoai,
+      email,
+      diaChi,
+      maLop,
+      maPhuHuynh,
+      maTaiKhoan,
+    } = studentData;
+
     try {
       const [result] = await pool.execute(
         `INSERT INTO hocsinh (hoTen, mssv, ngaySinh, gioiTinh, soDienThoai, email, diaChi, maLop, maPhuHuynh, maTaiKhoan, trangThai) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'hoat_dong')`,
-        [hoTen, mssv, ngaySinh, gioiTinh, soDienThoai, email, diaChi, maLop, maPhuHuynh, maTaiKhoan]
+        [
+          hoTen,
+          mssv,
+          ngaySinh,
+          gioiTinh,
+          soDienThoai,
+          email,
+          diaChi,
+          maLop,
+          maPhuHuynh,
+          maTaiKhoan,
+        ]
       );
-      
+
       return {
         success: true,
         maHocSinh: result.insertId,
-        message: "Tạo học sinh thành công"
+        message: "Tạo học sinh thành công",
       };
     } catch (error) {
       throw new Error("Lỗi khi tạo học sinh: " + error.message);

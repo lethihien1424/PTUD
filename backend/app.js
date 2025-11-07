@@ -2,8 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const { testConnection } = require("./src/config/db");
 
-// Import routes
-const userRoutes = require("./src/routes/userRoutes");
+// Import routes - chỉ import authRoutes để test login
+const authRoutes = require("./src/routes/authRoutes");
 
 const app = express();
 
@@ -24,14 +24,28 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
-app.use("/api/users", userRoutes);
+// Routes - chỉ auth routes để test login
+app.use("/api/auth", authRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({
     status: "OK",
     message: "Server đang hoạt động",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Test API endpoint
+app.get("/api/test", (req, res) => {
+  res.json({
+    success: true,
+    message: "API hoạt động bình thường - Test login ready",
+    endpoints: {
+      login: "POST /api/auth/login",
+      profile: "GET /api/auth/profile (cần token)",
+      health: "GET /api/health",
+    },
     timestamp: new Date().toISOString(),
   });
 });
