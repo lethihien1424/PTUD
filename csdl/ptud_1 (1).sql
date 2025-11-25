@@ -1102,7 +1102,7 @@ ALTER TABLE `phongthi`
   ADD CONSTRAINT `phongthi_ibfk_1` FOREIGN KEY (`maTruong`) REFERENCES `truong` (`maTruong`);
 
 --
--- Các ràng buộc cho bảng `phuhuynh`
+-- Các ràng buộc cho bảng `phuhuynh`gggg
 --
 ALTER TABLE `phuhuynh`
   ADD CONSTRAINT `phuhuynh_ibfk_1` FOREIGN KEY (`maTaiKhoan`) REFERENCES `taikhoan` (`maTaiKhoan`) ON DELETE SET NULL ON UPDATE CASCADE;
