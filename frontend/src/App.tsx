@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LoginPage from './components/LoginPage';
 import TrangChuBanGiamHieu from './components/TrangChuBanGiamHieu';
 import TrangChuGiaoVu from './components/TrangChuGiaoVu';
@@ -17,15 +17,26 @@ export interface User {
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
 
+  // Khi khởi động app, kiểm tra localStorage để giữ trạng thái đăng nhập
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem('user');
   };
 
   const handleLogin = (userData: any) => {
-    setUser({
+    const userObj = {
       ...userData,
       loaiTaiKhoan: userData.loaiTaiKhoan,
-    });
+    };
+    setUser(userObj);
+    localStorage.setItem('user', JSON.stringify(userObj));
   };
 
   if (!user) {
