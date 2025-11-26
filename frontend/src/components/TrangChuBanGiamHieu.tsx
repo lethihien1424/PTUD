@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../App';
 import DashboardLayout from './Header';
 import { Card } from './ui/card';
@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Users, TrendingUp, FileText, UserCheck } from 'lucide-react';
+import { Users, TrendingUp, FileText, UserCheck, Calendar, BookOpen } from 'lucide-react';
 import TKBHS from "./LapThoiKhoaBieu";
 import BaiTapHS from "./LamBaiTap";
 import KQHocTap from "./KQHocTap";
@@ -26,7 +26,7 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
   }, [activeTab]);
 
   const menuItems = [
-    { id: "schedule", name: "Thời khóa biểu", icon: Calendar },
+    { id: "schedule", name: "BAN GIAM HIEU", icon: Calendar },
     { id: "grades", name: "Kết quả học tập", icon: BookOpen },
     { id: "homework", name: "Bài tập", icon: FileText },
   ];
