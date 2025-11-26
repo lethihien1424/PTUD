@@ -58,10 +58,9 @@ export default function Login({ onLogin }: LoginProps) {
         giaovien: 'teacher',
         gvcn: 'homeroom-teacher', // ✅ Sửa lại mapping cho GVCN
         bangiamhieu: 'principal',
-        hieuTruong: 'principal',
         phuHuynh: 'parent',
         giaovu: 'academic-affairs',
-        soGD: 'education-dept',
+        nvso: 'education-dept',
       };
 
       const mappedRole = roleMap[userInfo.loaiTaiKhoan] || 'student';
