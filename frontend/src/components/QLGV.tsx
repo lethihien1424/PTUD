@@ -170,19 +170,19 @@ export function QLGV() {
 
     // Validate email
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newTeacher.email)) {
-      toast.error('Email không hợp lệ');
+      toast.error('❌ Email không hợp lệ');
       return;
     }
 
     // Validate CCCD (12 digits)
     if (!/^\d{12}$/.test(newTeacher.CCCD)) {
-      toast.error('CCCD phải có 12 chữ số');
+      toast.error('❌ CCCD phải có đúng 12 chữ số');
       return;
     }
 
     // Validate SDT (10 digits)
     if (!/^\d{10}$/.test(newTeacher.SDT)) {
-      toast.error('Số điện thoại phải có 10 chữ số');
+      toast.error('❌ Số điện thoại phải có đúng 10 chữ số');
       return;
     }
 
@@ -201,6 +201,7 @@ export function QLGV() {
       const result = await response.json();
 
       if (!response.ok) {
+        // Hiển thị lỗi từ backend (bao gồm lỗi trùng lặp)
         throw new Error(result.message || 'Không thể thêm giáo viên');
       }
 
@@ -228,6 +229,7 @@ export function QLGV() {
         });
         setIsAddDialogOpen(false);
         loadTeachers();
+        loadStatistics(); // Cập nhật lại thống kê
       }
     } catch (error: any) {
       console.error('Error adding teacher:', error);
@@ -243,6 +245,24 @@ export function QLGV() {
 
     if (!editingTeacher.hoTen || !editingTeacher.email || !editingTeacher.CCCD || !editingTeacher.chuyenMon || !editingTeacher.SDT) {
       toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
+      return;
+    }
+
+    // Validate email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editingTeacher.email)) {
+      toast.error('❌ Email không hợp lệ');
+      return;
+    }
+
+    // Validate CCCD (12 digits)
+    if (!/^\d{12}$/.test(editingTeacher.CCCD)) {
+      toast.error('❌ CCCD phải có đúng 12 chữ số');
+      return;
+    }
+
+    // Validate SDT (10 digits)
+    if (!/^\d{10}$/.test(editingTeacher.SDT)) {
+      toast.error('❌ Số điện thoại phải có đúng 10 chữ số');
       return;
     }
 
@@ -269,6 +289,7 @@ export function QLGV() {
       const result = await response.json();
 
       if (!response.ok) {
+        // Hiển thị lỗi từ backend (bao gồm lỗi trùng lặp)
         throw new Error(result.message || 'Không thể cập nhật giáo viên');
       }
 

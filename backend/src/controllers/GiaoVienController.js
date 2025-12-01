@@ -45,15 +45,41 @@ class TeacherController {
       }
 
       // Kiểm tra CCCD đã tồn tại chưa
-      const [existingTeacher] = await pool.execute(
-        "SELECT maGV FROM giaovien WHERE CCCD = ? AND trangThai = 1",
+      const [existingCCCD] = await pool.execute(
+        "SELECT maGV, hoTen FROM giaovien WHERE CCCD = ? AND trangThai = 1",
         [CCCD]
       );
 
-      if (existingTeacher.length > 0) {
+      if (existingCCCD.length > 0) {
         return res.status(400).json({
           success: false,
-          message: "CCCD đã tồn tại trong hệ thống",
+          message: `CCCD đã tồn tại trong hệ thống (Giáo viên: ${existingCCCD[0].hoTen})`,
+        });
+      }
+
+      // Kiểm tra Email đã tồn tại chưa
+      const [existingEmail] = await pool.execute(
+        "SELECT maGV, hoTen FROM giaovien WHERE email = ? AND trangThai = 1",
+        [email]
+      );
+
+      if (existingEmail.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Email đã tồn tại trong hệ thống (Giáo viên: ${existingEmail[0].hoTen})`,
+        });
+      }
+
+      // Kiểm tra Số điện thoại đã tồn tại chưa
+      const [existingSDT] = await pool.execute(
+        "SELECT maGV, hoTen FROM giaovien WHERE SDT = ? AND trangThai = 1",
+        [SDT]
+      );
+
+      if (existingSDT.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Số điện thoại đã tồn tại trong hệ thống (Giáo viên: ${existingSDT[0].hoTen})`,
         });
       }
 
@@ -61,6 +87,22 @@ class TeacherController {
       let loaiTaiKhoan = "giaovien";
       if (chucVu === "GVCN") {
         loaiTaiKhoan = "gvcn";
+      }
+
+      // Bước 1: Tạo tên đăng nhập từ email (phần trước dấu @)
+      const tenDangNhap = email.split("@")[0];
+
+      // Kiểm tra tên đăng nhập đã tồn tại chưa
+      const [existingUsername] = await pool.execute(
+        "SELECT maTaiKhoan FROM taikhoan WHERE tenDangNhap = ?",
+        [tenDangNhap]
+      );
+
+      if (existingUsername.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Tên đăng nhập "${tenDangNhap}" đã tồn tại. Vui lòng sử dụng email khác.`,
+        });
       }
 
       // Sinh mã tài khoản tự động
@@ -73,7 +115,8 @@ class TeacherController {
         newNumber = parseInt(lastCode.replace("TKGV", "")) + 1;
       }
       const maTaiKhoan = `TKGV${String(newNumber).padStart(3, "0")}`;
-      const tenDangNhap = email.split("@")[0];
+
+      // Mật khẩu mặc định là 123456
       const matKhau = crypto.createHash("md5").update("123456").digest("hex");
 
       // Tạo tài khoản
@@ -127,13 +170,13 @@ class TeacherController {
             account: {
               maTaiKhoan,
               tenDangNhap,
-              defaultPassword: "123",
+              defaultPassword: "123456",
               loaiTaiKhoan,
             },
             loginInfo: {
               message: `Tài khoản đã được tạo cho giáo viên ${hoTen}`,
               username: tenDangNhap,
-              password: "123",
+              password: "123456",
               note: "Vui lòng thông báo cho giáo viên đăng nhập và đổi mật khẩu ngay",
             },
           },
@@ -200,6 +243,45 @@ class TeacherController {
         return res.status(400).json({
           success: false,
           message: "Vui lòng nhập đầy đủ thông tin bắt buộc",
+        });
+      }
+
+      // Kiểm tra CCCD đã tồn tại ở giáo viên khác chưa
+      const [existingCCCD] = await pool.execute(
+        "SELECT maGV, hoTen FROM giaovien WHERE CCCD = ? AND maGV != ? AND trangThai = 1",
+        [CCCD, maGV]
+      );
+
+      if (existingCCCD.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `CCCD đã tồn tại trong hệ thống (Giáo viên: ${existingCCCD[0].hoTen})`,
+        });
+      }
+
+      // Kiểm tra Email đã tồn tại ở giáo viên khác chưa
+      const [existingEmail] = await pool.execute(
+        "SELECT maGV, hoTen FROM giaovien WHERE email = ? AND maGV != ? AND trangThai = 1",
+        [email, maGV]
+      );
+
+      if (existingEmail.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Email đã tồn tại trong hệ thống (Giáo viên: ${existingEmail[0].hoTen})`,
+        });
+      }
+
+      // Kiểm tra Số điện thoại đã tồn tại ở giáo viên khác chưa
+      const [existingSDT] = await pool.execute(
+        "SELECT maGV, hoTen FROM giaovien WHERE SDT = ? AND maGV != ? AND trangThai = 1",
+        [SDT, maGV]
+      );
+
+      if (existingSDT.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Số điện thoại đã tồn tại trong hệ thống (Giáo viên: ${existingSDT[0].hoTen})`,
         });
       }
 
