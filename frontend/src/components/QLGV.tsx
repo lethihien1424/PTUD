@@ -168,6 +168,27 @@ export function QLGV() {
       return;
     }
 
+    // Validate họ tên
+    const namePattern = /^[A-ZÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ][a-zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]*(\s[A-ZÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ][a-zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]*)*$/;
+    
+    if (!namePattern.test(newTeacher.hoTen.trim())) {
+      toast.error('❌ Họ tên không hợp lệ. Vui lòng viết hoa chữ cái đầu mỗi từ (VD: Nguyễn Văn An)');
+      return;
+    }
+
+    // Kiểm tra tên không chứa viết tắt
+    const abbreviationPattern = /\b[A-Z]{2,}\b/;
+    if (abbreviationPattern.test(newTeacher.hoTen)) {
+      toast.error('❌ Họ tên không được chứa chữ viết tắt (như VDD, GS, TS). Vui lòng nhập đầy đủ họ tên');
+      return;
+    }
+
+    // Kiểm tra độ dài tên
+    if (newTeacher.hoTen.trim().length < 3 || newTeacher.hoTen.trim().length > 50) {
+      toast.error('❌ Họ tên phải từ 3 đến 50 ký tự');
+      return;
+    }
+
     // Validate email
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newTeacher.email)) {
       toast.error('❌ Email không hợp lệ');
@@ -245,6 +266,27 @@ export function QLGV() {
 
     if (!editingTeacher.hoTen || !editingTeacher.email || !editingTeacher.CCCD || !editingTeacher.chuyenMon || !editingTeacher.SDT) {
       toast.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
+      return;
+    }
+
+    // Validate họ tên
+    const namePattern = /^[A-ZÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ][a-zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]*(\s[A-ZÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ][a-zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]*)*$/;
+    
+    if (!namePattern.test(editingTeacher.hoTen.trim())) {
+      toast.error('❌ Họ tên không hợp lệ. Vui lòng viết hoa chữ cái đầu mỗi từ (VD: Nguyễn Văn An)');
+      return;
+    }
+
+    // Kiểm tra tên không chứa viết tắt
+    const abbreviationPattern = /\b[A-Z]{2,}\b/;
+    if (abbreviationPattern.test(editingTeacher.hoTen)) {
+      toast.error('❌ Họ tên không được chứa chữ viết tắt (như VDD, GS, TS). Vui lòng nhập đầy đủ họ tên');
+      return;
+    }
+
+    // Kiểm tra độ dài tên
+    if (editingTeacher.hoTen.trim().length < 3 || editingTeacher.hoTen.trim().length > 50) {
+      toast.error('❌ Họ tên phải từ 3 đến 50 ký tự');
       return;
     }
 
