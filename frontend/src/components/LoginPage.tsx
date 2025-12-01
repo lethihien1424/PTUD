@@ -1,22 +1,31 @@
-import { useState } from 'react';
-import { User, UserRole } from '../App';
+import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card } from './ui/card';
 import { GraduationCap, Lock, User as UserIcon } from 'lucide-react';
 
-interface LoginProps {
-  onLogin: (user: User) => void;
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  loaiTaiKhoan: string;
+  details?: any;
 }
 
-export default function Login({ onLogin }: LoginProps) {
+interface LoginProps {
+  onLogin: (user: User) => void;
+  onAccountLocked: () => void;
+}
+
+export default function Login({ onLogin, onAccountLocked }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -42,8 +51,14 @@ export default function Login({ onLogin }: LoginProps) {
         throw new Error('Server trả về response không hợp lệ: ' + text);
       }
 
+      // ✅ Kiểm tra nếu đăng nhập không thành công
       if (!res.ok || !data.success) {
-        setError('Tên đăng nhập hoặc mật khẩu không đúng!');
+        // Nếu tài khoản bị khóa, chuyển đến trang AccountLocked
+        if (data.message === 'Tài khoản đã bị khóa!') {
+          onAccountLocked();
+          return;
+        }
+        setError(data.message || 'Tên đăng nhập hoặc mật khẩu không đúng!');
         setLoading(false);
         return;
       }
@@ -52,11 +67,18 @@ export default function Login({ onLogin }: LoginProps) {
       const userInfo = data.data.user;
       const teacherInfo = data.data.teacherInfo;
 
+      // ✅ Kiểm tra trạng thái tài khoản (isActive)
+      // Nếu backend trả về isActive = 0 hoặc false, chuyển đến trang tài khoản bị khóa
+      if (userInfo.isActive === 0 || userInfo.isActive === false) {
+        onAccountLocked();
+        return;
+      }
+
       // ✅ Chuyển loaiTaiKhoan từ backend sang UserRole của App
-      const roleMap: Record<string, UserRole> = {
+      const roleMap: Record<string, string> = {
         hocsinh: 'student',
         giaovien: 'teacher',
-        gvcn: 'homeroom-teacher', // ✅ Sửa lại mapping cho GVCN
+        gvcn: 'homeroom-teacher',
         bangiamhieu: 'principal',
         phuHuynh: 'parent',
         giaovu: 'academic-affairs',
@@ -71,8 +93,8 @@ export default function Login({ onLogin }: LoginProps) {
         name: userInfo.details?.hoTen || teacherInfo?.hoTen || userInfo.tenDangNhap,
         email: userInfo.details?.email || teacherInfo?.email || `${userInfo.tenDangNhap}@school.edu.vn`,
         role: mappedRole,
-        loaiTaiKhoan: userInfo.loaiTaiKhoan, // Truyền đúng loại tài khoản từ backend
-        details: userInfo.details, // phải có dòng này
+        loaiTaiKhoan: userInfo.loaiTaiKhoan,
+        details: userInfo.details,
       };
 
       // ✅ Lưu token và thông tin user vào localStorage

@@ -26,7 +26,7 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
   }, [activeTab]);
 
   const menuItems = [
-    { id: "schedule", name: "Thời khóa biểu", icon: Calendar },
+    { id: "schedule", name: "HOC SINH", icon: Calendar },
     { id: "grades", name: "Kết quả học tập", icon: BookOpen },
     { id: "homework", name: "Bài tập", icon: FileText },
   ];

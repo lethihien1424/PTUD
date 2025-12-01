@@ -9,8 +9,10 @@ class AttendanceModel {
       attendanceData;
 
     try {
-      // Sinh mã điểm danh duy nhất
-      const maDiemDanh = "DD" + Date.now() + Math.floor(Math.random() * 1000);
+      // Sinh mã điểm danh duy nhất bằng UUID
+      const maDiemDanh =
+        "DD" + uuidv4().replace(/-/g, "").substring(0, 12).toUpperCase();
+
       const [result] = await pool.execute(
         `INSERT INTO kqdiemdanh (maDiemDanh, maHocSinh, maLop, thoiGian, trangThai, lyDo) 
          VALUES (?, ?, ?, NOW(), ?, ?)`,
@@ -25,11 +27,11 @@ class AttendanceModel {
 
       return {
         success: true,
-        maDiemDanh: result.insertId,
+        maDiemDanh: maDiemDanh,
         message: "Tạo điểm danh thành công",
         data: {
           student,
-          attendanceStatus: trangThai, // hoặc lấy từ attendance nếu muốn chi tiết hơn
+          attendanceStatus: trangThai,
         },
       };
     } catch (error) {
@@ -450,6 +452,36 @@ class AttendanceModel {
     } catch (error) {
       throw new Error("Lỗi khi lấy toàn bộ điểm danh lớp: " + error.message);
     }
+  }
+  //them
+  static async getAbsenceReportByClass(maLop, year, month) {
+    const query = `
+      SELECT hs.maHocSinh, hs.hoTen, COUNT(dd.maDiemDanh) AS soLanVang
+      FROM hocsinh hs
+      LEFT JOIN kqdiemdanh dd ON hs.maHocSinh = dd.maHocSinh
+        AND dd.trangThai IN ('Vắng', 'Có phép', 'Không phép')
+        AND MONTH(dd.thoiGian) = ? AND YEAR(dd.thoiGian) = ?
+      WHERE hs.maLop = ?
+      GROUP BY hs.maHocSinh, hs.hoTen
+      ORDER BY soLanVang DESC
+    `;
+    const [rows] = await pool.execute(query, [month, year, maLop]);
+    return rows;
+  }
+
+  static async getAbsenceReportByClassYear(maLop, year) {
+    const query = `
+      SELECT hs.maHocSinh, hs.hoTen, COUNT(dd.maDiemDanh) AS soLanVang
+      FROM hocsinh hs
+      LEFT JOIN kqdiemdanh dd ON hs.maHocSinh = dd.maHocSinh
+        AND dd.trangThai IN ('Vắng', 'Có phép', 'Không phép')
+        AND YEAR(dd.thoiGian) = ?
+      WHERE hs.maLop = ?
+      GROUP BY hs.maHocSinh, hs.hoTen
+      ORDER BY soLanVang DESC
+    `;
+    const [rows] = await pool.execute(query, [year, maLop]);
+    return rows;
   }
 }
 

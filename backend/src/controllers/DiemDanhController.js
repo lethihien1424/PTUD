@@ -622,6 +622,39 @@ class AttendanceController {
       });
     }
   }
+  // ms them
+  static async getAbsenceReportByClass(req, res) {
+    try {
+      const { maLop } = req.params;
+      const { year, month } = req.query;
+
+      if (!year || !month) {
+        return res.status(400).json({
+          success: false,
+          message: "Thiếu thông tin năm hoặc tháng",
+        });
+      }
+
+      // Gọi model để lấy báo cáo
+      const report = await DiemDanhModel.getAbsenceReportByClass(
+        maLop,
+        year,
+        month
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: report,
+        message: "Lấy báo cáo vắng học thành công",
+      });
+    } catch (error) {
+      console.error("Lỗi lấy báo cáo vắng học:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi server: " + error.message,
+      });
+    }
+  }
 }
 
 module.exports = AttendanceController;

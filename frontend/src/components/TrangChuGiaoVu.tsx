@@ -9,38 +9,37 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Calendar, Users, UserCheck, ClipboardList, BookOpen, FileText } from 'lucide-react';
 
-import TKBHS from "./LapThoiKhoaBieu";
-import BaiTapHS from "./LamBaiTap";
-import KQHocTap from "./KQHocTap";
+import { AttendanceApp } from './DiemDanh';
+import { QLGV } from './QLGV';
 
-interface StudentDashboardProps {
+interface AcademicAffairsDashboardProps {
   user: User;
   onLogout: () => void;
 }
 
-export default function StudentDashboard({ user, onLogout }: StudentDashboardProps) {
+export default function TrangChuGiaoVu({ user, onLogout }: AcademicAffairsDashboardProps) {
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("studentActiveTab") || "schedule";
+    return localStorage.getItem("academicAffairsActiveTab") || "teacher-management";
   });
 
   useEffect(() => {
-    localStorage.setItem("studentActiveTab", activeTab);
+    localStorage.setItem("academicAffairsActiveTab", activeTab);
   }, [activeTab]);
 
   const menuItems = [
-    { id: "schedule", name: "Thời khóa biểu", icon: Calendar },
-    { id: "grades", name: "Kết quả học tập", icon: BookOpen },
-    { id: "homework", name: "Bài tập", icon: FileText },
+
+    { id: "teacher-management", name: "Quản lý giáo viên", icon: Users },
+    { id: "attendance", name: "Điểm danh", icon: UserCheck },
   ];
 
   const renderContent = () => {
     switch (activeTab) {
-      case "schedule":
-        return <TKBHS />;
-      case "homework":
-        return <BaiTapHS />;
-      case "conduct":
-        return <KQHocTap />;
+      case "teacher-management":
+        return <QLGV />;
+      case "attendance":
+        return <AttendanceApp />;
+      default:
+        return <QLGV />;
     }
   };
 
@@ -66,3 +65,4 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
     </DashboardLayout>
   );
 }
+

@@ -1,6 +1,8 @@
 const UserModel = require("../models/TaiKhoanModel");
 const TeacherModel = require("../models/GiaoVienModel");
 const jwt = require("jsonwebtoken");
+const { pool } = require("../config/db"); //Đảm bảo đường dẫn đúng tới file cấu hình pool
+const crypto = require("crypto");
 
 class AuthController {
   // Đăng nhập
@@ -10,9 +12,42 @@ class AuthController {
 
       // Validate input
       if (!tenDangNhap || !matKhau) {
-        return res.status(400).json({
+        return res
+          .status(400)
+          .json({ success: false, message: "Vui lòng nhập đầy đủ thông tin!" });
+      }
+
+      // Truy vấn theo tên đăng nhập
+      const [rows] = await pool.execute(
+        "SELECT * FROM taikhoan WHERE tenDangNhap = ?",
+        [tenDangNhap]
+      );
+
+      if (rows.length === 0) {
+        return res.status(401).json({
           success: false,
-          message: "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu",
+          message: "Tên đăng nhập hoặc mật khẩu không đúng!",
+        });
+      }
+
+      // Kiểm tra trạng thái tài khoản
+      if (rows[0].isActive === 0) {
+        return res
+          .status(403)
+          .json({ success: false, message: "Tài khoản đã bị khóa!" });
+      }
+
+      // Mã hóa mật khẩu nhập vào để so sánh
+      const hashedPassword = crypto
+        .createHash("md5")
+        .update(matKhau)
+        .digest("hex");
+
+      // Kiểm tra mật khẩu
+      if (rows[0].matKhau !== hashedPassword) {
+        return res.status(401).json({
+          success: false,
+          message: "Tên đăng nhập hoặc mật khẩu không đúng!",
         });
       }
 

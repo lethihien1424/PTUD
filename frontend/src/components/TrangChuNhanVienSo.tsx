@@ -13,18 +13,18 @@ import TKBHS from "./LapThoiKhoaBieu";
 import BaiTapHS from "./LamBaiTap";
 import KQHocTap from "./KQHocTap";
 
-interface StudentDashboardProps {
+interface EducationDeptDashboardProps {
   user: User;
   onLogout: () => void;
 }
 
-export default function StudentDashboard({ user, onLogout }: StudentDashboardProps) {
+export default function TrangChuNhanVienSo({ user, onLogout }: EducationDeptDashboardProps) {
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("studentActiveTab") || "schedule";
+    return localStorage.getItem("educationDeptActiveTab") || "schedule";
   });
 
   useEffect(() => {
-    localStorage.setItem("studentActiveTab", activeTab);
+    localStorage.setItem("educationDeptActiveTab", activeTab);
   }, [activeTab]);
 
   const menuItems = [

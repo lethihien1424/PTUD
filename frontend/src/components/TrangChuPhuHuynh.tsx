@@ -14,18 +14,18 @@ import TKBHS from "./LapThoiKhoaBieu";
 import BaiTapHS from "./LamBaiTap";
 import KQHocTap from "./KQHocTap";
 
-interface StudentDashboardProps {
+interface ParentDashboardProps {
   user: User;
   onLogout: () => void;
 }
 
-export default function StudentDashboard({ user, onLogout }: StudentDashboardProps) {
+export default function TrangChuPhuHuynh({ user, onLogout }: ParentDashboardProps) {
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("studentActiveTab") || "schedule";
+    return localStorage.getItem("parentActiveTab") || "schedule";
   });
 
   useEffect(() => {
-    localStorage.setItem("studentActiveTab", activeTab);
+    localStorage.setItem("parentActiveTab", activeTab);
   }, [activeTab]);
 
   const menuItems = [
@@ -40,8 +40,10 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
         return <TKBHS />;
       case "homework":
         return <BaiTapHS />;
-      case "conduct":
+      case "grades":
         return <KQHocTap />;
+      default:
+        return <TKBHS />;
     }
   };
 

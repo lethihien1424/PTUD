@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const AttendanceController = require("../controllers/DiemDanhController");
+const AttendanceModel = require("../models/DiemDanhModel");
 const {
   authenticateToken,
   authorizeEducationOfficer,
@@ -62,6 +63,29 @@ router.get(
   "/class/:maLop",
   authorizeAttendanceAccess,
   AttendanceController.getAllAttendanceByClass
+);
+//ms them
+router.get(
+  "/class/:maLop/report",
+  authorizeAttendanceAccess,
+  AttendanceController.getAbsenceReportByClass
+);
+
+router.get(
+  "/class/:maLop/report/year/:year",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { maLop, year } = req.params;
+      const data = await AttendanceModel.getAbsenceReportByClassYear(
+        maLop,
+        year
+      );
+      res.json({ success: true, data });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
 );
 
 // Routes cho giáo viên chủ nhiệm

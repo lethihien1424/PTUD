@@ -9,38 +9,47 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Calendar, Users, UserCheck, ClipboardList, BookOpen, FileText } from 'lucide-react';
 
-import TKBHS from "./LapThoiKhoaBieu";
-import BaiTapHS from "./LamBaiTap";
-import KQHocTap from "./KQHocTap";
+import DiemDanhGVCN from './DiemDanh_GVCN';
 
-interface StudentDashboardProps {
+interface HomeroomTeacherDashboardProps {
   user: User;
   onLogout: () => void;
 }
 
-export default function StudentDashboard({ user, onLogout }: StudentDashboardProps) {
+export default function TrangChuGVCN({ user, onLogout }: HomeroomTeacherDashboardProps) {
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("studentActiveTab") || "schedule";
+    return localStorage.getItem("homeroomTeacherActiveTab") || "diemdanh";
   });
 
   useEffect(() => {
-    localStorage.setItem("studentActiveTab", activeTab);
+    localStorage.setItem("homeroomTeacherActiveTab", activeTab);
   }, [activeTab]);
 
   const menuItems = [
-    { id: "schedule", name: "Thời khóa biểu", icon: Calendar },
-    { id: "grades", name: "Kết quả học tập", icon: BookOpen },
-    { id: "homework", name: "Bài tập", icon: FileText },
+    { id: "diemdanh", name: "Xem danh lớp chủ nhiệm", icon: UserCheck },
+    
   ];
 
   const renderContent = () => {
     switch (activeTab) {
-      case "schedule":
-        return <TKBHS />;
-      case "homework":
-        return <BaiTapHS />;
-      case "conduct":
-        return <KQHocTap />;
+      case "diemdanh":
+        return <DiemDanhGVCN user={user} />;
+      case "ketqua":
+        return (
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Kết quả học tập</h2>
+            <p className="text-gray-600">Chức năng đang phát triển...</p>
+          </Card>
+        );
+      case "hocsinh":
+        return (
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Quản lý học sinh</h2>
+            <p className="text-gray-600">Chức năng đang phát triển...</p>
+          </Card>
+        );
+      default:
+        return <DiemDanhGVCN user={user} />;
     }
   };
 
