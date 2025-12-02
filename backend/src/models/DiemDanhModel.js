@@ -156,6 +156,45 @@ class AttendanceModel {
         [maLop, startDate, endDate, maLop]
       );
 
+      // Lấy chi tiết ngày vắng cho từng học sinh
+      for (const student of rows) {
+        const [absenceDetails] = await pool.execute(
+          `SELECT 
+             DATE(thoiGian) as ngayVang,
+             trangThai,
+             lyDo
+           FROM kqdiemdanh
+           WHERE maHocSinh = ? 
+             AND maLop = ?
+             AND trangThai IN ('Có phép', 'Không phép', 'Vắng')
+             AND DATE(thoiGian) BETWEEN ? AND ?
+           ORDER BY thoiGian DESC`,
+          [student.maHocSinh, maLop, startDate, endDate]
+        );
+
+        // Phân loại ngày vắng
+        student.chiTietVangCoPhep = absenceDetails
+          .filter((d) => d.trangThai === "Có phép")
+          .map((d) => ({
+            ngay: d.ngayVang,
+            lyDo: d.lyDo,
+          }));
+
+        student.chiTietVangKhongPhep = absenceDetails
+          .filter((d) => d.trangThai === "Không phép")
+          .map((d) => ({
+            ngay: d.ngayVang,
+            lyDo: d.lyDo,
+          }));
+
+        student.chiTietVang = absenceDetails
+          .filter((d) => d.trangThai === "Vắng")
+          .map((d) => ({
+            ngay: d.ngayVang,
+            lyDo: d.lyDo,
+          }));
+      }
+
       return rows;
     } catch (error) {
       throw new Error("Lỗi khi lấy thống kê điểm danh: " + error.message);
@@ -204,6 +243,45 @@ class AttendanceModel {
          ORDER BY hs.hoTen`,
         [maLop, startDate, endDate, maLop]
       );
+
+      // Lấy chi tiết ngày vắng cho từng học sinh
+      for (const student of rows) {
+        const [absenceDetails] = await pool.execute(
+          `SELECT 
+             DATE(thoiGian) as ngayVang,
+             trangThai,
+             lyDo
+           FROM kqdiemdanh
+           WHERE maHocSinh = ? 
+             AND maLop = ?
+             AND trangThai IN ('Có phép', 'Không phép', 'Vắng')
+             AND DATE(thoiGian) BETWEEN ? AND ?
+           ORDER BY thoiGian DESC`,
+          [student.maHocSinh, maLop, startDate, endDate]
+        );
+
+        // Phân loại ngày vắng
+        student.chiTietVangCoPhep = absenceDetails
+          .filter((d) => d.trangThai === "Có phép")
+          .map((d) => ({
+            ngay: d.ngayVang,
+            lyDo: d.lyDo,
+          }));
+
+        student.chiTietVangKhongPhep = absenceDetails
+          .filter((d) => d.trangThai === "Không phép")
+          .map((d) => ({
+            ngay: d.ngayVang,
+            lyDo: d.lyDo,
+          }));
+
+        student.chiTietVang = absenceDetails
+          .filter((d) => d.trangThai === "Vắng")
+          .map((d) => ({
+            ngay: d.ngayVang,
+            lyDo: d.lyDo,
+          }));
+      }
 
       return rows;
     } catch (error) {

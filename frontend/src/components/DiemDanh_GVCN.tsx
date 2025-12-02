@@ -57,7 +57,7 @@ export default function DiemDanhGVCN({ user }: { user: User }) {
   const [reportError, setReportError] = useState("");
   const [reportType, setReportType] = useState<"month" | "year">("month");
 
-  const [absenceDetails, setAbsenceDetails] = useState<Record<string, string[]>>({});
+  const [absenceDetails, setAbsenceDetails] = useState<Record<string, any>>({});
   const [loadingDetails, setLoadingDetails] = useState<Record<string, boolean>>({});
 
   const API_URL = "http://localhost:3000/api";
@@ -230,7 +230,10 @@ export default function DiemDanhGVCN({ user }: { user: User }) {
         endDate = `${reportYear}-12-31`;
       }
 
-      const url = `${API_URL}/attendance/student/${maHocSinh}/history?startDate=${startDate}&endDate=${endDate}`;
+      // Sử dụng API mới cho thống kê chi tiết
+      const url = `${API_URL}/attendance/statistics/detailed/${classInfo?.maLop}?startDate=${startDate}&endDate=${endDate}`;
+
+      console.log('🔍 Đang gọi API:', url);
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
@@ -238,24 +241,35 @@ export default function DiemDanhGVCN({ user }: { user: User }) {
 
       const data = await response.json();
       
-      if (data.success) {
-        // Lọc các ngày vắng
-        const absentDates = data.data
-          .filter((record: any) => ['Vắng', 'Có phép', 'Không phép'].includes(record.trangThai))
-          .map((record: any) => {
-            const date = new Date(record.thoiGian || record.ngayDiemDanh);
-            return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-          });
-
-        setAbsenceDetails(prev => ({
-          ...prev,
-          [maHocSinh]: absentDates
-        }));
+      console.log('📊 Dữ liệu từ API:', data);
+      
+      if (data.success && data.data) {
+        // Tìm học sinh trong kết quả
+        const studentData = data.data.find((s: any) => s.maHocSinh === maHocSinh);
+        
+        console.log('👨‍🎓 Dữ liệu học sinh:', studentData);
+        
+        if (studentData) {
+          const details = {
+            coPhep: studentData.chiTietVangCoPhep || [],
+            khongPhep: studentData.chiTietVangKhongPhep || [],
+            vang: studentData.chiTietVang || []
+          };
+          
+          console.log('✅ Chi tiết vắng:', details);
+          
+          setAbsenceDetails(prev => ({
+            ...prev,
+            [maHocSinh]: details
+          }));
+        } else {
+          console.warn('⚠️ Không tìm thấy học sinh:', maHocSinh);
+        }
       } else {
-        console.error("Error fetching absence dates:", data.message);
+        console.error('❌ API trả về lỗi:', data.message);
       }
     } catch (error) {
-      console.error("Lỗi khi tải chi tiết ngày vắng:", error);
+      console.error("❌ Lỗi khi tải chi tiết ngày vắng:", error);
     } finally {
       setLoadingDetails(prev => ({ ...prev, [maHocSinh]: false }));
     }
@@ -290,27 +304,113 @@ export default function DiemDanhGVCN({ user }: { user: User }) {
   };
 
   const handleExportReport = () => {
-    if (!absenceReport || absenceReport.length === 0) return;
-    const header = ["STT", "Mã HS", "Họ và tên", "Số lần vắng", "Ngày vắng"];
-    const rows = absenceReport.map((row, idx) => [
-      idx + 1,
-      row.maHocSinh,
-      row.hoTen,
-      row.soLanVang,
-      row.ngayVang ? row.ngayVang.split(",").join("; ") : "-"
-    ]);
-    const csvContent =
-      [header, ...rows]
-        .map(e => e.map(v => `"${v}"`).join(","))
-        .join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    if (!absenceReport || absenceReport.length === 0) {
+      alert('Không có dữ liệu để xuất');
+      return;
+    }
+
+    // Kiểm tra xem đã load chi tiết cho học sinh nào chưa
+    const studentsWithDetails = absenceReport.filter(row => absenceDetails[row.maHocSinh]);
+    
+    if (studentsWithDetails.length === 0) {
+      alert('⚠️ Vui lòng click "Xem chi tiết" cho ít nhất một học sinh trước khi xuất file!');
+      return;
+    }
+
+    // Header với tiếng Việt rõ ràng
+    const header = [
+      "STT", 
+      "Ma HS", 
+      "Ho va ten", 
+      "Tong so lan vang",
+      "Vang co phep (so buoi)",
+      "Ngay vang co phep",
+      "Vang khong phep (so buoi)",
+      "Ngay vang khong phep"
+    ];
+
+    const rows = absenceReport.map((row, idx) => {
+      const details = absenceDetails[row.maHocSinh];
+      
+      // Lấy danh sách ngày vắng có phép
+      let ngayCoPhep = '-';
+      let soNgayCoPhep = 0;
+      
+      if (details && details.coPhep && details.coPhep.length > 0) {
+        soNgayCoPhep = details.coPhep.length;
+        ngayCoPhep = details.coPhep.map((item: any) => {
+          const date = new Date(item.ngay);
+          const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+          const lyDo = item.lyDo ? ` (${item.lyDo})` : '';
+          return `${dateStr}${lyDo}`;
+        }).join('; ');
+      }
+
+      // Lấy danh sách ngày vắng không phép
+      let ngayKhongPhep = '-';
+      let soNgayKhongPhep = 0;
+      
+      if (details && details.khongPhep && details.khongPhep.length > 0) {
+        soNgayKhongPhep = details.khongPhep.length;
+        ngayKhongPhep = details.khongPhep.map((item: any) => {
+          const date = new Date(item.ngay);
+          const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+          const lyDo = item.lyDo ? ` (${item.lyDo})` : '';
+          return `${dateStr}${lyDo}`;
+        }).join('; ');
+      }
+
+      return [
+        idx + 1,
+        row.maHocSinh,
+        row.hoTen,
+        row.soLanVang || 0,
+        soNgayCoPhep,
+        ngayCoPhep,
+        soNgayKhongPhep,
+        ngayKhongPhep
+      ];
+    });
+
+    // Tạo CSV content với encoding UTF-8
+    const csvContent = [header, ...rows]
+      .map(row => row.map(cell => {
+        // Escape dấu ngoặc kép trong cell
+        const cellStr = String(cell).replace(/"/g, '""');
+        return `"${cellStr}"`;
+      }).join(","))
+      .join("\r\n");
+
+    // Thêm BOM (Byte Order Mark) để Excel nhận diện UTF-8
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { 
+      type: "text/csv;charset=utf-8;" 
+    });
+    
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `thongke_vanghoc_${reportType}_${reportYear}.csv`);
+    
+    const fileName = reportType === "month" 
+      ? `ThongKe_VangHoc_Thang${String(reportMonth).padStart(2, '0')}_Nam${reportYear}.csv`
+      : `ThongKe_VangHoc_Nam${reportYear}.csv`;
+    
+    link.setAttribute("download", fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Hiển thị thông báo thành công
+    const message = `
+✅ Đã xuất file thành công!
+📄 Tên file: ${fileName}
+📊 Số học sinh có chi tiết: ${studentsWithDetails.length}/${absenceReport.length}
+
+💡 Mẹo: Mở file bằng Excel hoặc Google Sheets để xem đẹp hơn!
+    `.trim();
+    
+    alert(message);
   };
 
   const stats = getStatistics();
@@ -647,45 +747,91 @@ export default function DiemDanhGVCN({ user }: { user: User }) {
             {reportLoading ? (
               <div className="text-center py-8">Đang tải...</div>
             ) : (
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 text-left">STT</th>
-                    <th className="px-4 py-2 text-left">Mã HS</th>
-                    <th className="px-4 py-2 text-left">Họ và tên</th>
-                    <th className="px-4 py-2 text-left">Số lần vắng</th>
-                    <th className="px-4 py-2 text-left">Ngày vắng</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {absenceReport.map((row, idx) => (
-                    <tr key={row.maHocSinh}>
-                      <td className="px-4 py-2">{idx + 1}</td>
-                      <td className="px-4 py-2">{row.maHocSinh}</td>
-                      <td className="px-4 py-2">{row.hoTen}</td>
-                      <td className="px-4 py-2 font-bold text-red-600">{row.soLanVang}</td>
-                      <td className="px-4 py-2 text-sm">
-                        {absenceDetails[row.maHocSinh] ? (
-                          <div className="text-gray-700">
-                            {absenceDetails[row.maHocSinh].join(", ")}
-                          </div>
-                        ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border">STT</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border">Mã HS</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border">Họ và tên</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border">Số lần vắng</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-green-700 border bg-green-50">Vắng có phép</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-red-700 border bg-red-50">Vắng không phép</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border">Chi tiết</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {absenceReport.map((row, idx) => (
+                      <tr key={row.maHocSinh} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm border">{idx + 1}</td>
+                        <td className="px-4 py-3 text-sm border font-medium">{row.maHocSinh}</td>
+                        <td className="px-4 py-3 text-sm border">{row.hoTen}</td>
+                        <td className="px-4 py-3 text-sm border">
+                          <span className="font-bold text-red-600">{row.soLanVang}</span>
+                        </td>
+                        <td className="px-4 py-3 text-sm border">
+                          {absenceDetails[row.maHocSinh]?.coPhep ? (
+                            <div className="space-y-1">
+                              <div className="font-bold text-green-600">
+                                {absenceDetails[row.maHocSinh].coPhep.length} buổi
+                              </div>
+                              {absenceDetails[row.maHocSinh].coPhep.length > 0 && (
+                                <div className="text-xs text-gray-600">
+                                  {absenceDetails[row.maHocSinh].coPhep.map((item: any, i: number) => (
+                                    <div key={i} className="mb-1">
+                                      • {new Date(item.ngay).toLocaleDateString('vi-VN')}
+                                      {item.lyDo && <span className="italic ml-1">({item.lyDo})</span>}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm border">
+                          {absenceDetails[row.maHocSinh]?.khongPhep ? (
+                            <div className="space-y-1">
+                              <div className="font-bold text-red-600">
+                                {absenceDetails[row.maHocSinh].khongPhep.length} buổi
+                              </div>
+                              {absenceDetails[row.maHocSinh].khongPhep.length > 0 && (
+                                <div className="text-xs text-gray-600">
+                                  {absenceDetails[row.maHocSinh].khongPhep.map((item: any, i: number) => (
+                                    <div key={i} className="mb-1">
+                                      • {new Date(item.ngay).toLocaleDateString('vi-VN')}
+                                      {item.lyDo && <span className="italic ml-1">({item.lyDo})</span>}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm border">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => fetchAbsenceDates(row.maHocSinh)}
-                            disabled={loadingDetails[row.maHocSinh]}
+                            disabled={loadingDetails[row.maHocSinh] || absenceDetails[row.maHocSinh]}
                             className="flex items-center gap-1"
                           >
                             <Eye size={14} />
-                            {loadingDetails[row.maHocSinh] ? "Đang tải..." : "Xem chi tiết"}
+                            {loadingDetails[row.maHocSinh] 
+                              ? "Đang tải..." 
+                              : absenceDetails[row.maHocSinh]
+                              ? "Đã tải"
+                              : "Xem chi tiết"}
                           </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardContent>
         </Card>

@@ -44,33 +44,6 @@ class TeacherController {
         });
       }
 
-      // Validate tên giáo viên
-      const namePattern = /^[A-ZÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ][a-zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]*(\s[A-ZÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ][a-zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]*)*$/;
-      
-      if (!namePattern.test(hoTen.trim())) {
-        return res.status(400).json({
-          success: false,
-          message: "Họ tên không hợp lệ. Vui lòng nhập đầy đủ họ tên, viết hoa chữ cái đầu mỗi từ, không chứa số hoặc ký tự đặc biệt (VD: Nguyễn Văn An)",
-        });
-      }
-
-      // Kiểm tra tên không chứa viết tắt
-      const abbreviationPattern = /\b[A-Z]{2,}\b/;
-      if (abbreviationPattern.test(hoTen)) {
-        return res.status(400).json({
-          success: false,
-          message: "Họ tên không được chứa chữ viết tắt (như VDD, GS, TS). Vui lòng nhập đầy đủ họ tên",
-        });
-      }
-
-      // Kiểm tra độ dài tên
-      if (hoTen.trim().length < 3 || hoTen.trim().length > 50) {
-        return res.status(400).json({
-          success: false,
-          message: "Họ tên phải từ 3 đến 50 ký tự",
-        });
-      }
-
       // Kiểm tra CCCD đã tồn tại chưa
       const [existingCCCD] = await pool.execute(
         "SELECT maGV, hoTen FROM giaovien WHERE CCCD = ? AND trangThai = 1",

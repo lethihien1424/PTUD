@@ -104,4 +104,11 @@ router.get(
 
 router.post("/confirm", AttendanceController.confirmAttendance);
 
+// Routes mới cho thống kê chi tiết vắng học
+router.get(
+  "/statistics/detailed/:maLop",
+  authorizeAttendanceAccess,
+  AttendanceController.getDetailedAbsenceStatistics
+);
+
 module.exports = router;

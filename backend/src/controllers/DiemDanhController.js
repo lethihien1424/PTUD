@@ -655,6 +655,74 @@ class AttendanceController {
       });
     }
   }
+
+  // Lấy thống kê chi tiết vắng có phép và không phép
+  static async getDetailedAbsenceStatistics(req, res) {
+    try {
+      const { maLop } = req.params;
+      const { startDate, endDate } = req.query;
+
+      if (!startDate || !endDate) {
+        return res.status(400).json({
+          success: false,
+          message: "Thiếu thông tin khoảng thời gian",
+        });
+      }
+
+      // Kiểm tra quyền truy cập
+      if (
+        req.user.loaiTaiKhoan === "gvcn" ||
+        req.user.loaiTaiKhoan === "giaovien"
+      ) {
+        const hasPermission = await GiaoVienModel.isHomeRoomTeacherOfClass(
+          req.teacher.maGV,
+          maLop
+        );
+
+        if (!hasPermission) {
+          return res.status(403).json({
+            success: false,
+            message: "Bạn không có quyền xem thống kê của lớp này",
+          });
+        }
+      } else if (req.user.loaiTaiKhoan !== "giaovu") {
+        return res.status(403).json({
+          success: false,
+          message: "Không có quyền truy cập",
+        });
+      }
+
+      // Gọi hàm thống kê đã được cập nhật
+      let statistics;
+      if (req.user.loaiTaiKhoan === "giaovu") {
+        statistics = await DiemDanhModel.getAttendanceStatistics(
+          maLop,
+          startDate,
+          endDate
+        );
+      } else {
+        statistics =
+          await DiemDanhModel.getAttendanceStatisticsForHomeRoomTeacher(
+            maLop,
+            startDate,
+            endDate,
+            req.teacher.maGV
+          );
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: statistics,
+        message: "Lấy thống kê chi tiết vắng học thành công",
+      });
+    } catch (error) {
+      console.error("Lỗi lấy thống kê chi tiết:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi server: " + error.message,
+      });
+    }
+  }
 }
 
 module.exports = AttendanceController;
