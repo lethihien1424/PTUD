@@ -9,9 +9,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Calendar, Users, UserCheck, ClipboardList, BookOpen, FileText } from 'lucide-react';
 
-import TKBHS from "./LapThoiKhoaBieu";
-import BaiTapHS from "./LamBaiTap";
-import KQHocTap from "./KQHocTap";
+import ClassManagement from "./ClassManagement";
 
 interface StudentDashboardProps {
   user: User;
@@ -28,19 +26,13 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
   }, [activeTab]);
 
   const menuItems = [
-    { id: "schedule", name: "Thời khóa biểu", icon: Calendar },
-    { id: "grades", name: "Kết quả học tập", icon: BookOpen },
-    { id: "homework", name: "Bài tập", icon: FileText },
+    { id: "class-management", name: "Quản lý lớp", icon: Users },
   ];
 
   const renderContent = () => {
     switch (activeTab) {
-      case "schedule":
-        return <TKBHS />;
-      case "homework":
-        return <BaiTapHS />;
-      case "conduct":
-        return <KQHocTap />;
+      case "class-management":
+        return <ClassManagement />;
     }
   };
 

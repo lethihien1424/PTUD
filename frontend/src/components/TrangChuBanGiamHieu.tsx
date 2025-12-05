@@ -5,11 +5,14 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Users, TrendingUp, FileText, UserCheck, Calendar, BookOpen } from 'lucide-react';
-import TKBHS from "./LapThoiKhoaBieu";
-import BaiTapHS from "./LamBaiTap";
-import KQHocTap from "./KQHocTap";
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Calendar, Users, UserCheck, ClipboardList, BookOpen, FileText, Layers } from 'lucide-react';
+
+// Import các trang chức năng
+
+import TeacherAssignmentSystem from './TeacherAssignmentSystem'; // <--- 1. IMPORT COMPONENT PHÂN CÔNG
+import GradeRequests from './GradeRequests'; // <--- IMPORT GIAO DIỆN DUYỆT PHIẾU SỬA ĐIỂM
 
 interface StudentDashboardProps {
   user: User;
@@ -25,20 +28,23 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
     localStorage.setItem("studentActiveTab", activeTab);
   }, [activeTab]);
 
+  // 2. THÊM MỤC MENU "PHÂN CÔNG GIÁO VIÊN"
   const menuItems = [
     { id: "schedule", name: "BAN GIAM HIEU", icon: Calendar },
-    { id: "grades", name: "Kết quả học tập", icon: BookOpen },
-    { id: "homework", name: "Bài tập", icon: FileText },
+    { id: "assignments", name: "Phân công chuyên môn", icon: Layers }, // <--- Thêm dòng này
+    { id: "gradeRequests", name: "Duyệt phiếu sửa điểm", icon: ClipboardList },
   ];
 
+  // 3. THÊM CASE HIỂN THỊ GIAO DIỆN
   const renderContent = () => {
     switch (activeTab) {
-      case "schedule":
-        return <TKBHS />;
-      case "homework":
-        return <BaiTapHS />;
-      case "conduct":
-        return <KQHocTap />;
+      
+      case "assignments": // <--- Khi bấm menu Phân công thì hiện trang này
+        return <TeacherAssignmentSystem />;
+
+      case "gradeRequests":
+        return <GradeRequests />;
+
     }
   };
 
@@ -48,7 +54,7 @@ export default function StudentDashboard({ user, onLogout }: StudentDashboardPro
         <Button
           key={item.id}
           variant={activeTab === item.id ? "default" : "ghost"}
-          className="w-full justify-start"
+          className={`w-full justify-start ${activeTab === item.id ? "bg-blue-600 text-white" : ""}`}
           onClick={() => setActiveTab(item.id)}
         >
           <item.icon size={18} className="mr-2" />

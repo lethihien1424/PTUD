@@ -99,6 +99,7 @@ class AssignmentModel {
                 classesMap.get(row.classId).subjects.push({
                     id: row.subjectId,
                     name: row.subjectName,
+                    maPhanCong: row.maPhanCong,
                     assignedTeacher: assignedTeacher
                 });
             }

@@ -89,7 +89,7 @@ CREATE TABLE `bangthongbao` (
   `maThongBao` varchar(10) NOT NULL,
   `noiDung` varchar(255) NOT NULL,
   `tieuDe` varchar(255) NOT NULL,
-  `ngayDang` date NOT NULL DEFAULT current_timestamp(),
+  `ngayDang` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `loaiThongBao` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -478,7 +478,18 @@ INSERT INTO `monhoc` (`maMonHoc`, `tenMonHoc`, `khoiApDung`) VALUES
 ('V12', 'Ngữ Văn', 12);
 
 -- --------------------------------------------------------
-
+INSERT INTO monhoc (maMonHoc, tenMonHoc, khoiApDung) VALUES
+('HH10', 'Hóa học', 10),
+('SH10', 'Sinh học', 10),
+('LS10', 'Lịch sử', 10),
+('DL10', 'Địa lý', 10),
+('GD10', 'GDCD', 10),
+('TH10', 'Tin học', 10),
+('CN10', 'Công nghệ', 10),
+('QP10', 'GDQP-AN', 10),
+('TC10', 'Giáo dục thể chất', 10),
+('HD10', 'Hoạt động trải nghiệm', 10),
+('DP10', 'Giáo dục địa phương', 10);
 --
 -- Cấu trúc bảng cho bảng `nguyenvong`
 --
@@ -527,7 +538,7 @@ CREATE TABLE `phieusuadiem` (
   `loaiDiem` enum('diem15p','diem1tiet','diemCK','diemGK','diemMieng') NOT NULL,
   `lyDo` varchar(255) NOT NULL,
   `minhChung` varchar(255) NOT NULL,
-  `ngayGui` date NOT NULL DEFAULT current_timestamp(),
+  `ngayGui` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `trangThai` enum('Chờ duyệt','Đã duyệt','Từ chối','') NOT NULL,
   `maGV` varchar(10) NOT NULL,
   `maDiem` varchar(10) NOT NULL,
@@ -683,8 +694,20 @@ INSERT INTO `taikhoan` (`maTaiKhoan`, `tenDangNhap`, `matKhau`, `loaiTaiKhoan`, 
 ('TKPH001', 'phuhuynh', '2b2b7f6d7f578456dde7b92e36584994', 'phuhuynh', 0, '2025-11-26 00:49:03', 1);
 
 -- --------------------------------------------------------
-
+-- Mật khẩu đã mã hóa là của 'Admin123@A'
+INSERT INTO taikhoan (maTaiKhoan, tenDangNhap, matKhau, loaiTaiKhoan, isDefaultPassword, isActive) VALUES
+('TK020', 'gv_hoahoc', '2b2b7f6d7f578456dde7b92e36584994', 'giaovien', 1, 1),
+('TK021', 'gv_sinh', '2b2b7f6d7f578456dde7b92e36584994', 'giaovien', 1, 1),
+('TK022', 'gv_lichsu', '2b2b7f6d7f578456dde7b92e36584994', 'giaovien', 1, 1),
+('TK023', 'gv_dialy', '2b2b7f6d7f578456dde7b92e36584994', 'giaovien', 1, 1),
+('TK024', 'gv_gdcd', '2b2b7f6d7f578456dde7b92e36584994', 'giaovien', 1, 1);
 --
+INSERT INTO giaovien (maGV, hoTen, CCCD, diaChi, ngayBatDau, chuyenMon, chucVu, ngayKetThuc, trangThai, SDT, maTaiKhoan, email) VALUES
+('GV015', 'Nguyễn Thị Hải', 1000000001, '456 Đường Hóa Học, Q.5', '2023-09-01', 'Hóa học', 'GVBM', '0000-00-00', 1, '0981230000', 'TK020', 'hai.nguyen@example.com'),
+('GV016', 'Lê Văn Tám', 1000000002, '789 Đường Sinh Học, Q. Bình Thạnh', '2023-09-01', 'Sinh học', 'GVBM', '0000-00-00', 1, '0982340000', 'TK021', 'tam.le@example.com'),
+('GV017', 'Trần Văn Sử', 1000000003, '101 Đường Lịch Sử, Q. Thủ Đức', '2023-09-01', 'Lịch sử', 'GVBM', '0000-00-00', 1, '0983450000', 'TK022', 'su.tran@example.com'),
+('GV018', 'Phạm Thị Loan', 1000000004, '202 Đường Địa Lý, Q. Phú Nhuận', '2023-09-01', 'Địa lý', 'GVBM', '0000-00-00', 1, '0984560000', 'TK023', 'loan.pham@example.com'),
+('GV019', 'Hoàng Trọng Đức', 1000000005, '303 Đường GDCD, Q.1', '2023-09-01', 'GDCD', 'GVBM', '0000-00-00', 1, '0985670000', 'TK024', 'duc.hoang@example.com');
 -- Cấu trúc bảng cho bảng `thisinh`
 --
 
@@ -698,6 +721,35 @@ CREATE TABLE `thisinh` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
+INSERT INTO phieusuadiem (
+    maPhieu, diemCu, diemDeNghi, loaiDiem, lyDo, minhChung,
+    ngayGui, trangThai, maGV, maDiem, maHocKy
+)
+VALUES
+('PSD1763701', 6.0, 7.0, 'diem15p',
+ 'Cô nhập thiếu điểm bài kiểm tra 15 phút.',
+ 'anhminhchung_15p_01.jpg',
+ '2025-12-01 08:00:00', 'Chờ duyệt', 'GV001', 'DI0524807', 'HK1_2025'),
+
+('PSD1763702', 7.5, 8.0, 'diem1tiet',
+ 'Bài làm đúng nhưng bị trừ nhầm câu số 3.',
+ 'tiet1_03.png',
+ '2025-12-01 09:10:00', 'Chờ duyệt', 'GV001', 'DI0557696', 'HK1_2025'),
+
+('PSD1763703', 5.0, 6.0, 'diem15p',
+ 'Giáo viên nhập nhầm điểm sang bài khác.',
+ 'anh_bai_15p_02.jpg',
+ '2025-12-02 07:45:00', 'Chờ duyệt', 'GV002', 'DI0602788', 'HK2_2025'),
+
+('PSD1763704', 8.0, 9.0, 'diem1tiet',
+ 'Đã đối chiếu bài và phát hiện thiếu điểm cộng.',
+ 'minhchung_tiet1_04.jpg',
+ '2025-12-02 10:20:00', 'Chờ duyệt', 'GV001', 'DI0476365', 'HK2_2025'),
+
+('PSD1763705', 9.0, 9.5, 'diemHK',
+ 'Bổ sung điểm khuyến khích theo quy định.',
+ 'file_minhchung_hk.png',
+ '2025-12-03 11:30:00', 'Chờ duyệt', 'GV002', 'DI0835637', 'HK1_2025');
 
 --
 -- Cấu trúc bảng cho bảng `thoikhoabieu`

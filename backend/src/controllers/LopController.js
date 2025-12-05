@@ -28,23 +28,32 @@ class ClassController {
 
     //Tạo lớp mới
     static async createClass(req, res) {
-        // Giao diện React gửi 3 trường này
-        const { khoi, maGVChuNhiem, siSo } = req.body;
-        
+        // Giao diện React gửi các trường này
+        const { khoi, maGVChuNhiem, siSo, tenLop } = req.body;
+
         if (!khoi || !maGVChuNhiem || !siSo) {
             return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc (khối, gvcn, sĩ số)." });
         }
 
         try {
-            // Logic tạo tên lớp tự động 
+            // Logic tạo/hoặc dùng tên lớp do người dùng nhập
             const classCount = await ClassModel.countByGrade(khoi);
-            const tenLop = `${khoi}A${classCount + 1}`;
-            // Tạm dùng tenLop làm maLop (Bạn có thể thay đổi logic này)
-            const maLop = `${khoi}A${classCount + 1}`; 
+            const generatedName = `${khoi}A${classCount + 1}`;
+            const finalTenLop = tenLop && String(tenLop).trim() !== '' ? String(tenLop).trim() : generatedName;
+            const maLop = generatedName; // maLop vẫn dùng mã sinh theo khối để đảm bảo duy nhất
+
+            // Kiểm tra trùng tên lớp nếu người dùng nhập thủ công
+            if (tenLop && tenLop.trim() !== '') {
+                const existing = await ClassModel.findAll();
+                const exists = existing.some(c => (c.name || '').trim().toLowerCase() === finalTenLop.toLowerCase());
+                if (exists) {
+                    return res.status(409).json({ success: false, message: 'Tên lớp đã tồn tại.' });
+                }
+            }
 
             const classData = {
                 maLop,
-                tenLop,
+                tenLop: finalTenLop,
                 khoi,
                 siSo: parseInt(siSo),
                 maGVChuNhiem,
@@ -52,13 +61,13 @@ class ClassController {
             };
 
             await ClassModel.create(classData);
-            
+
             res.status(201).json({ 
                 success: true, 
                 message: "Tạo lớp thành công.",
-                data: { maLop, tenLop } 
+                data: { maLop, tenLop: finalTenLop } 
             });
-            
+
         } catch (error) {
             console.error("Lỗi Controller (createClass):", error);
             res.status(500).json({ success: false, message: error.message });
